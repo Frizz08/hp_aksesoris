@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -12,16 +13,19 @@ import androidx.navigation.fragment.navArgs
 import com.example.hp_aksesoris.application.AccessorisApp
 import com.example.hp_aksesoris.databinding.FragmentSecondBinding
 import com.example.hp_aksesoris.model.Accessoris
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.R
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class SecondFragment : Fragment() {
+class SecondFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentSecondBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
     private lateinit var applicationContext: Context
     private val accessorisViewModel: AccessorisViewModel by viewModels {
@@ -29,6 +33,7 @@ class SecondFragment : Fragment() {
     }
     private val args: SecondFragmentArgs by navArgs()
     private var accessoris: Accessoris?= null
+    private lateinit var mMap: GoogleMap
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -49,16 +54,36 @@ class SecondFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         accessoris= args.accessoris
+        //cek accessoris null tampilan default
+        //jika tidak null tampilan sedikit berubah
 
         if (accessoris !=null){
             binding.deleteButton.visibility= View.VISIBLE
             binding.saveButton.text= "Ubah"
+            binding.nameEditText.setText(accessoris?.name)
+            binding.addressEditText.setText(accessoris?.address)
         }
+
+        //binding google map
+        val mapFragment= childFragmentManager
+            .findFragmentById(R.id.map)
+
         val name = binding.nameEditText.text
         val address = binding.addressEditText.text
         binding.saveButton.setOnClickListener {
-            val accessoris= Accessoris(0, name.toString(), address.toString())
-            accessorisViewModel.insert(accessoris)
+            if (name.isEmpty()){
+                Toast.makeText(context, "Nama tidak boleh kosong", Toast.LENGTH_SHORT).show()
+            } else if (address.isEmpty()){
+                Toast.makeText(context, "Alamat tidak boleh kosong", Toast.LENGTH_SHORT).show()
+            } else{
+                if (accessoris== null){
+                    val accessoris= Accessoris(0, name.toString(), address.toString())
+                    accessorisViewModel.insert(accessoris)
+                }else{
+                    val accessoris= Accessoris(accessoris?.id!!, name.toString(), address.toString())
+                    accessorisViewModel.update(accessoris)
+                }
+            }
             findNavController().popBackStack() // Untuk dismiss halaman ini
         }
 
@@ -71,5 +96,13 @@ class SecondFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap= googleMap
+
+        val sydney= LatLng(-34.8, 151.0)
+        mMap.addMarker(MarkerOptions().position(sydney).title("Uji coba marker sydney"))
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15f))
     }
 }

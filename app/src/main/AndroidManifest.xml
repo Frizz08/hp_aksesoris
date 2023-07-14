@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hp_aksesoris"
         tools:targetApi="31">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD3DT26TWSRmflLjLiMjko-uFEAnCg0s1g"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
