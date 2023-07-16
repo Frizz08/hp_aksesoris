@@ -10,20 +10,23 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.hp_aksesoris.R
 import com.example.hp_aksesoris.application.AccessorisApp
 import com.example.hp_aksesoris.databinding.FragmentSecondBinding
 import com.example.hp_aksesoris.model.Accessoris
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.R
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class SecondFragment : Fragment(), OnMapReadyCallback {
+class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
 
     private var _binding: FragmentSecondBinding? = null
     private val binding get() = _binding!!
@@ -34,6 +37,7 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
     private val args: SecondFragmentArgs by navArgs()
     private var accessoris: Accessoris?= null
     private lateinit var mMap: GoogleMap
+    private var curretLatLang: LatLng?= null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -66,7 +70,8 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
 
         //binding google map
         val mapFragment= childFragmentManager
-            .findFragmentById(R.id.map)
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
 
         val name = binding.nameEditText.text
         val address = binding.addressEditText.text
@@ -100,9 +105,28 @@ class SecondFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap= googleMap
+        //implement drag marker
 
+        val uiSettings= mMap.uiSettings
+        uiSettings.isZoomControlsEnabled= true
         val sydney= LatLng(-34.8, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Uji coba marker sydney"))
+        val markerOption= MarkerOptions()
+            .position(sydney)
+            .title("Test")
+            .draggable(true)
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_hp_shop))
+        mMap.addMarker(markerOption)
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15f))
+        mMap.setOnMarkerDragListener(this)
     }
+
+    override fun onMarkerDrag(p0: Marker) {}
+
+    override fun onMarkerDragEnd(marker: Marker) {
+        val newPosition= marker.position
+        curretLatLang= LatLng(newPosition.latitude, newPosition.longitude)
+        Toast.makeText(context, curretLatLang.toString(), Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onMarkerDragStart(p0: Marker) {}
 }
