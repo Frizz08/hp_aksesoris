@@ -1,12 +1,16 @@
 package com.example.hp_aksesoris.UI
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -43,6 +47,7 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
     private lateinit var mMap: GoogleMap
     private var curretLatLang: LatLng?= null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val cameraRequestCode= 2
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -101,6 +106,10 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
         binding.deleteButton.setOnClickListener {
             accessoris?.let { accessorisViewModel.delete(it) }
             findNavController().popBackStack()
+        }
+
+        binding.cameraButton.setOnClickListener{
+            checkCameraPermission()
         }
     }
 
@@ -174,5 +183,29 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLang, 15f))
                 }
             }
+    }
+    private fun checkCameraPermission(){
+        if (ContextCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.CAMERA
+            )!=PackageManager.PERMISSION_GRANTED){
+            activity?.let {
+                ActivityCompat.requestPermissions(
+                    it,
+                    arrayOf(android.Manifest.permission.CAMERA),
+                    cameraRequestCode)
+            }
+        }else{
+            val cameraIntent= Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivityForResult(cameraIntent, cameraRequestCode)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode== cameraRequestCode){
+            val photo: Bitmap= data?.extras?.get("data") as Bitmap
+            binding.photoImageView.setImageBitmap(photo)
+        }
     }
 }

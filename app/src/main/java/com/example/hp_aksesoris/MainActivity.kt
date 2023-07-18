@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
             arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
             LOCATION_PERMISSION_REQUEST_CODE)
         }else{
-            //bisa melakukan sesuatu
+            //bisa melakukan sesuatu jika disetujui
         }
     }
 }
