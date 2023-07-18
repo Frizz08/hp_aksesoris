@@ -1,11 +1,13 @@
 package com.example.hp_aksesoris.UI
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -14,6 +16,8 @@ import com.example.hp_aksesoris.R
 import com.example.hp_aksesoris.application.AccessorisApp
 import com.example.hp_aksesoris.databinding.FragmentSecondBinding
 import com.example.hp_aksesoris.model.Accessoris
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -38,6 +42,7 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
     private var accessoris: Accessoris?= null
     private lateinit var mMap: GoogleMap
     private var curretLatLang: LatLng?= null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -72,6 +77,7 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
         val mapFragment= childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        checkPermission()
 
         val name = binding.nameEditText.text
         val address = binding.addressEditText.text
@@ -109,14 +115,6 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
 
         val uiSettings= mMap.uiSettings
         uiSettings.isZoomControlsEnabled= true
-        val sydney= LatLng(-34.8, 151.0)
-        val markerOption= MarkerOptions()
-            .position(sydney)
-            .title("Test")
-            .draggable(true)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_hp_shop))
-        mMap.addMarker(markerOption)
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15f))
         mMap.setOnMarkerDragListener(this)
     }
 
@@ -128,5 +126,47 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
         Toast.makeText(context, curretLatLang.toString(), Toast.LENGTH_SHORT).show()
     }
 
-    override fun onMarkerDragStart(p0: Marker) {}
+    override fun onMarkerDragStart(p0: Marker) {
+    }
+    private fun checkPermission(){
+        fusedLocationClient= LocationServices.getFusedLocationProviderClient(applicationContext)
+        if (ContextCompat.checkSelfPermission(
+            applicationContext,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ){
+            getCurrentLocation()
+        }else{
+            Toast.makeText(applicationContext, "Akses lokasi ditolak", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun getCurrentLocation(){
+        //mengcek jika permission tidak disetujui maka akan berhenti dikondisi if
+        if (ContextCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ){
+            return
+        }
+
+
+        //untuk test current location 
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                if (location != null){
+                    var latLang= LatLng(location.latitude, location.longitude)
+                    curretLatLang= latLang
+                    var title= "Marker"
+
+                    val markerOption= MarkerOptions()
+                        .position(latLang)
+                        .title(title)
+                        .draggable(true)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_hp_shop))
+                    mMap.addMarker(markerOption)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLang, 15f))
+                }
+            }
+    }
 }
