@@ -12,4 +12,8 @@ data class Accessoris(
     val id: Int = 0,
     val name: String,
     val address: String,
+    val latitude: Double?,
+    val longitude: Double?
+
+    //menambah data latitude dan longitude untuk disimpan dalam table
 ) : Parcelable

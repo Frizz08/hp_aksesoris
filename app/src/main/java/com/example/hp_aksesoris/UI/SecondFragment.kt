@@ -88,10 +88,10 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
                 Toast.makeText(context, "Alamat tidak boleh kosong", Toast.LENGTH_SHORT).show()
             } else{
                 if (accessoris== null){
-                    val accessoris= Accessoris(0, name.toString(), address.toString())
+                    val accessoris= Accessoris(0, name.toString(), address.toString(), curretLatLang?.latitude, curretLatLang?.longitude)
                     accessorisViewModel.insert(accessoris)
                 }else{
-                    val accessoris= Accessoris(accessoris?.id!!, name.toString(), address.toString())
+                    val accessoris= Accessoris(accessoris?.id!!, name.toString(), address.toString(), curretLatLang?.latitude, curretLatLang?.longitude)
                     accessorisViewModel.update(accessoris)
                 }
             }
@@ -159,6 +159,12 @@ class SecondFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerDragLis
                     curretLatLang= latLang
                     var title= "Marker"
 
+                    //menampilkan lokasi sesuai yang sudah disimpan atau diupdate
+                    if (accessoris != null){
+                        title= accessoris?.name.toString()
+                        val newCurrentLocation= LatLng(accessoris?.latitude!!, accessoris?.longitude!!)
+                        latLang= newCurrentLocation
+                    }
                     val markerOption= MarkerOptions()
                         .position(latLang)
                         .title(title)
